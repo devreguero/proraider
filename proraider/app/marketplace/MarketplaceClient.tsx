@@ -484,11 +484,28 @@ export default function MarketplaceClient({
   const [listings, setListings] = useState(initialListings)
   const [search, setSearch] = useState('')
   const [showForm, setShowForm] = useState(false)
-  const [, startTransition] = useTransition()
+  const [refreshing, setRefreshing] = useState(false)
+  const [isPending, startTransition] = useTransition()
+
+  // Sync local state when server data updates after router.refresh()
+  useEffect(() => {
+    setListings(initialListings)
+  }, [initialListings])
 
   function handleDelete(id: number) {
     setListings((prev) => prev.filter((l) => l.id !== id))
   }
+
+  function handleRefresh() {
+    setRefreshing(true)
+    startTransition(() => {
+      router.refresh()
+    })
+  }
+
+  useEffect(() => {
+    if (!isPending) setRefreshing(false)
+  }, [isPending])
 
   const handlePostSuccess = useCallback(() => {
     setShowForm(false)
@@ -565,6 +582,22 @@ export default function MarketplaceClient({
             className="w-full rounded-xl border border-white/10 bg-white/5 py-2 pl-9 pr-4 text-sm text-white placeholder-white/20 outline-none transition focus:border-[var(--app-accent)]/40"
           />
         </div>
+        <button
+          onClick={handleRefresh}
+          disabled={refreshing}
+          title="Recargar anuncios"
+          className="flex shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 p-2 text-white/40 transition hover:border-white/20 hover:bg-white/10 hover:text-white/80 disabled:opacity-40"
+        >
+          <svg
+            className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/>
+          </svg>
+        </button>
         <span className="text-sm text-white/25">{filtered.length} anuncio{filtered.length !== 1 ? 's' : ''}</span>
       </div>
 
