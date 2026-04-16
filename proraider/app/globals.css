@@ -142,6 +142,25 @@ h6 {
   border-top-color: rgba(79, 195, 255, 0.4) !important;
 }
 
+.key-popup .leaflet-popup-content-wrapper {
+  background: #1a1a1a !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.8) !important;
+  color: #fff !important;
+  padding: 0 !important;
+}
+.key-popup .leaflet-popup-content {
+  margin: 14px 16px !important;
+}
+.key-popup .leaflet-popup-tip {
+  background: #1a1a1a !important;
+}
+.key-popup .leaflet-popup-close-button {
+  color: rgba(255,255,255,0.4) !important;
+  font-size: 16px !important;
+}
+
 /* ── Page animations ─────────────────────────────────────────────────────────── */
 
 @keyframes fade-up {

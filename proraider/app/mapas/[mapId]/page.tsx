@@ -18,7 +18,7 @@ export default async function MapPage({
   return (
     <div
       className="flex overflow-hidden"
-      style={{ height: 'calc(100dvh - var(--navbar-h, 9.5rem))' }}
+      style={{ height: '100dvh' }}
     >
       <MapLayout map={map} />
     </div>

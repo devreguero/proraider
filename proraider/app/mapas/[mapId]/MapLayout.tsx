@@ -5,32 +5,65 @@ import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import type { MapDef } from '@/lib/mapsData'
 import { SPAWN_DATA } from '@/lib/spawnData'
+import { KEYS_DATA } from '@/lib/keysData'
 
 const MapViewer = dynamic(() => import('./MapViewer'), { ssr: false })
 
-export type LayerKey = 'playerSpawn' | 'containers' | 'keys' | 'arcSpawns' | 'extractions' | 'poi'
+export type LayerKey = 'playerSpawn' | 'keys' | 'extractions' | 'containers' | 'arcSpawns' | 'poi'
 
 type LayerDef = {
   key: LayerKey
   label: string
   color: string
   available: boolean
+  count?: number
+}
+
+type LayerGroup = {
+  label: string
+  layers: LayerDef[]
+}
+
+const RARITY_COLORS: Record<string, string> = {
+  uncommon:    '#4ade80',
+  rare:        '#60a5fa',
+  epic:        '#c084fc',
+  'power-rod': '#f97316',
+  'fuel-cell': '#facc15',
 }
 
 export default function MapLayout({ map }: { map: MapDef }) {
   const hasSpawns = (SPAWN_DATA[map.id]?.length ?? 0) > 0
+  const hasKeys   = (KEYS_DATA[map.id]?.length ?? 0) > 0
 
-  const layers: LayerDef[] = [
-    { key: 'playerSpawn', label: 'Spawns de jugadores', color: '#ffffff', available: hasSpawns },
-    { key: 'extractions', label: 'Extracciones',        color: '#4ade80', available: false },
-    { key: 'containers',  label: 'Contenedores',        color: '#fb923c', available: false },
-    { key: 'keys',        label: 'Llaves y accesos',    color: '#facc15', available: false },
-    { key: 'arcSpawns',   label: 'Spawns ARC',          color: '#f87171', available: false },
-    { key: 'poi',         label: 'Puntos de interés',   color: '#a78bfa', available: false },
+  const groups: LayerGroup[] = [
+    {
+      label: 'Ubicaciones',
+      layers: [
+        { key: 'playerSpawn', label: 'Spawns de jugadores', color: '#ffffff',  available: hasSpawns, count: SPAWN_DATA[map.id]?.length },
+        { key: 'extractions', label: 'Extracciones',        color: '#4ade80',  available: false },
+        { key: 'poi',         label: 'Puntos de interés',   color: '#a78bfa',  available: false },
+        { key: 'arcSpawns',   label: 'Spawns ARC',          color: '#f87171',  available: false },
+      ],
+    },
+    {
+      label: 'Llaves',
+      layers: [
+        { key: 'keys', label: 'Key Rooms', color: '#facc15', available: hasKeys, count: KEYS_DATA[map.id]?.length },
+      ],
+    },
+    {
+      label: 'Contenedores',
+      layers: [
+        { key: 'containers', label: 'Contenedores de loot', color: '#fb923c', available: false },
+      ],
+    },
   ]
 
+  const allLayers = groups.flatMap((g) => g.layers)
+
   const [active, setActive] = useState<Set<LayerKey>>(
-    () => new Set(layers.filter((l) => l.available).map((l) => l.key))
+    () => new Set(allLayers.filter((l) => l.available).map((l) => l.key))
   )
 
   const toggle = (key: LayerKey) =>
@@ -39,6 +72,19 @@ export default function MapLayout({ map }: { map: MapDef }) {
       next.has(key) ? next.delete(key) : next.add(key)
       return next
     })
+
+  // Key rarity legend for this map
+  const keys = KEYS_DATA[map.id] ?? []
+  const RARITY_LABELS: Record<string, string> = {
+    uncommon:    'Uncommon',
+    rare:        'Rare',
+    epic:        'Epic',
+    'power-rod': 'Power Rod',
+    'fuel-cell': 'Fuel Cell',
+  }
+  const rarityGroups = (['uncommon', 'rare', 'epic', 'power-rod', 'fuel-cell'] as const)
+    .map((r) => ({ rarity: r, count: keys.filter((k) => k.rarity === r).length }))
+    .filter((g) => g.count > 0)
 
   return (
     <div className="flex h-full w-full overflow-hidden">
@@ -62,54 +108,80 @@ export default function MapLayout({ map }: { map: MapDef }) {
           </div>
         </div>
 
-        {/* Layers */}
+        {/* Layer groups */}
         <div className="flex-1 overflow-y-auto px-3 py-4">
-          <p className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-widest text-white/25">
-            Capas
-          </p>
-
-          <div className="space-y-1">
-            {layers.map(({ key, label, color, available }) => {
-              const on = active.has(key)
-              return (
-                <button
-                  key={key}
-                  onClick={() => available && toggle(key)}
-                  disabled={!available}
-                  className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-xs transition ${
-                    !available
-                      ? 'cursor-default opacity-35'
-                      : on
-                        ? 'bg-white/[0.06] text-white'
-                        : 'text-white/50 hover:bg-white/[0.04] hover:text-white/70'
-                  }`}
-                >
-                  {/* Color dot / icon */}
-                  <span
-                    className="h-3 w-3 shrink-0 rounded-full"
-                    style={{ background: available ? color : '#555', opacity: on || !available ? 1 : 0.4 }}
-                  />
-
-                  <span className="flex-1 font-medium">{label}</span>
-
-                  {available ? (
-                    /* Toggle */
-                    <div
-                      className="relative h-4 w-7 shrink-0 rounded-full transition-colors"
-                      style={{ background: on ? color : 'rgba(255,255,255,0.12)' }}
-                    >
-                      <span
-                        className="absolute top-0.5 h-3 w-3 rounded-full bg-white shadow transition-transform"
-                        style={{ transform: on ? 'translateX(13px)' : 'translateX(2px)' }}
-                      />
-                    </div>
-                  ) : (
-                    <span className="shrink-0 text-[10px] text-white/20">Pronto</span>
-                  )}
-                </button>
-              )
-            })}
+          <div className="space-y-5">
+            {groups.map((group) => (
+              <div key={group.label}>
+                <p className="mb-1.5 px-1 text-[10px] font-semibold uppercase tracking-widest text-white/25">
+                  {group.label}
+                </p>
+                <div className="space-y-0.5">
+                  {group.layers.map(({ key, label, color, available, count }) => {
+                    const on = active.has(key)
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => available && toggle(key)}
+                        disabled={!available}
+                        className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-xs transition ${
+                          !available
+                            ? 'cursor-default opacity-30'
+                            : on
+                              ? 'bg-white/[0.06] text-white'
+                              : 'text-white/50 hover:bg-white/[0.04] hover:text-white/70'
+                        }`}
+                      >
+                        <span
+                          className="h-2.5 w-2.5 shrink-0 rounded-full"
+                          style={{ background: available ? color : '#444' }}
+                        />
+                        <span className="flex-1 font-medium">{label}</span>
+                        {available ? (
+                          <>
+                            {count !== undefined && (
+                              <span className="shrink-0 text-[10px] text-white/30">{count}</span>
+                            )}
+                            <div
+                              className="relative ml-1 h-4 w-7 shrink-0 rounded-full transition-colors"
+                              style={{ background: on ? color : 'rgba(255,255,255,0.12)' }}
+                            >
+                              <span
+                                className="absolute top-0.5 h-3 w-3 rounded-full bg-white shadow transition-transform"
+                                style={{ transform: on ? 'translateX(13px)' : 'translateX(2px)' }}
+                              />
+                            </div>
+                          </>
+                        ) : (
+                          <span className="shrink-0 text-[10px] text-white/20">Pronto</span>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
+
+          {/* Key rarity legend */}
+          {hasKeys && rarityGroups.length > 0 && (
+            <div className="mt-5">
+              <p className="mb-1.5 px-1 text-[10px] font-semibold uppercase tracking-widest text-white/25">
+                Rareza de llaves
+              </p>
+              <div className="space-y-1 px-1">
+                {rarityGroups.map(({ rarity, count }) => (
+                  <div key={rarity} className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full" style={{ background: RARITY_COLORS[rarity] }} />
+                      <span className="text-white/50">{RARITY_LABELS[rarity] ?? rarity}</span>
+                    </div>
+                    <span className="text-white/30">{count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Footer */}

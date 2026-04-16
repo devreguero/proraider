@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState, useCallback, useRef } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -319,11 +319,6 @@ function ScheduleTable({
   const [selectedMap, setSelectedMap] = useState(data.maps[0])
   const mc = MAP_COLORS[selectedMap] ?? { accent: 'text-white/50', border: 'border-white/10', bg: 'bg-white/5', dot: 'bg-white/40' }
   const rowRef = useRef<HTMLTableRowElement | null>(null)
-
-  // Scroll current hour into view when map changes or on mount
-  useEffect(() => {
-    rowRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
-  }, [selectedMap])
 
   return (
     <div className="mt-10">
