@@ -50,6 +50,7 @@ export const metadata: Metadata = {
   },
   robots: { index: true, follow: true },
   alternates: { canonical: 'https://proraider.vercel.app' },
+  verification: { google: 'TWo2MtHKyoAhEdGuehADLLh_khYV7aFmII_7e6e0BFc' },
 };
 
 export default async function RootLayout({
