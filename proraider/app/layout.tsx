@@ -28,8 +28,28 @@ const prompt = Prompt({
 });
 
 export const metadata: Metadata = {
-  title: "ProRaider - Guías de ARC Raiders",
-  description: "Meta, builds y guías actualizadas de ARC Raiders",
+  metadataBase: new URL('https://proraider.vercel.app'),
+  title: {
+    default: 'ProRaider - Guías de ARC Raiders',
+    template: '%s | ProRaider',
+  },
+  description: 'Meta, builds y guías actualizadas de ARC Raiders. Encuentra las mejores estrategias, armas y builds para dominar ARC Raiders.',
+  keywords: ['ARC Raiders', 'guías ARC Raiders', 'builds ARC Raiders', 'meta ARC Raiders', 'armas ARC Raiders', 'estrategias ARC Raiders'],
+  openGraph: {
+    type: 'website',
+    locale: 'es_ES',
+    url: 'https://proraider.vercel.app',
+    siteName: 'ProRaider',
+    title: 'ProRaider - Guías de ARC Raiders',
+    description: 'Meta, builds y guías actualizadas de ARC Raiders. Encuentra las mejores estrategias, armas y builds para dominar ARC Raiders.',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'ProRaider - Guías de ARC Raiders',
+    description: 'Meta, builds y guías actualizadas de ARC Raiders.',
+  },
+  robots: { index: true, follow: true },
+  alternates: { canonical: 'https://proraider.vercel.app' },
 };
 
 export default async function RootLayout({
